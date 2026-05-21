@@ -45,11 +45,11 @@ module FIR(
   // Koeffizienten-RAM
   logic                   write_en_coeff[NTAPS];
   logic [$clog2(512)-1:0] wr_addr_coeff;
-  logic [$clog2(512)-1:0] rd_addr_coeff;           // EINZIGE Leseadresse für alle coeff-RAMs
+  logic [$clog2(512)-1:0] rd_addr_coeff;           // EINZIGE Leseadresse fÃ¼r alle coeff-RAMs
   logic signed [13:0]     coeff_i[NTAPS];
   logic signed [13:0]     coeff_o[NTAPS];
   logic signed [31:0]     coeff_read_value;        // 32 Bit, sign-erweitert
-  logic signed [31:0]     coeff_read_reg;          // LATCH für Bus-Read
+  logic signed [31:0]     coeff_read_reg;          // LATCH fÃ¼r Bus-Read
   logic [8:0] idx_reg_p1;
   assign idx_reg_p1 = idx_reg + 9'd1;  // modulo 512, weil 9 Bit
   
@@ -132,7 +132,7 @@ module FIR(
     end else begin
 
       if (!init_done) begin
-        // --- INIT PHASE: Daten-RAM mit Testwerten füllen ---
+        // --- INIT PHASE: Daten-RAM mit Testwerten fÃ¼llen ---
         wr_addr  <= counter;
         sample_i <= '{default:(14'd1 + counter[1:0])};
         write_en <= 1'b1;
@@ -208,12 +208,12 @@ module FIR(
             // neuen ADC-Wert in Ring 0 schreiben
             sample_i[0] <= new_data;
 
-            // übrige Ringe übernehmen Wert aus dem vorherigen
+            // Ã¼brige Ringe Ã¼bernehmen Wert aus dem vorherigen
             for (int j = NTAPS-1; j > 0; j--) begin
               sample_i[j] <= sample_o[j-1];
             end
 
-            // Rückwärtslauf des Ringpuffers (511 -> ... -> 0 -> 511)
+            // RÃ¼ckwÃ¤rtslauf des Ringpuffers (511 -> ... -> 0 -> 511)
             if (ram_old == 9'd0)
               ram_old <= 9'd511;
             else
@@ -240,13 +240,13 @@ module FIR(
   end
 
   // =======================================================
-  // BLOCK 1c: Latch für Koeffizientenwert
+  // BLOCK 1c: Latch fÃ¼r Koeffizientenwert
   // =======================================================
   always_ff @(posedge adc_clk or negedge adc_rstn) begin
     if (!adc_rstn) begin
       coeff_read_reg <= 32'sd0;
     end else begin
-      // Wenn der FIR bei der gewünschten Adresse ist, Wert einfangen
+      // Wenn der FIR bei der gewÃ¼nschten Adresse ist, Wert einfangen
       if (rd_addr_coeff == idx_reg_p1) begin
         // 14 Bit -> 32 Bit sign-erweitern
         coeff_read_reg <= {{18{coeff_o[tap_reg][13]}}, coeff_o[tap_reg]};
@@ -292,8 +292,8 @@ module FIR(
       // READ REGISTER
       if (bus.ren) begin
         case (local_addr)
-          20'h00000: bus.rdata <= {{23{1'b0}}, tap_reg};      // TAP zurück
-          20'h00004: bus.rdata <= {{23{1'b0}}, idx_reg};      // ADDR zurück
+          20'h00000: bus.rdata <= {{23{1'b0}}, tap_reg};      // TAP zurÃ¼ck
+          20'h00004: bus.rdata <= {{23{1'b0}}, idx_reg};      // ADDR zurÃ¼ck
           20'h00008: bus.rdata <= coeff_read_reg;           // KOEFF-WERT
           default:   bus.rdata <= 32'hDEADBEEF;
         endcase
@@ -328,7 +328,7 @@ module FIR(
           coeff_i[k]        <= 14'sd0;
         end
       end else begin
-        // Für counter > 0 ? ALLE Taps auf Adresse counter = 0
+        // FÃ¼r counter > 0 ? ALLE Taps auf Adresse counter = 0
         for (int k = 0; k < NTAPS; k++) begin
           write_en_coeff[k] <= 1'b1;
           coeff_i[k]        <= 14'sd0;
@@ -346,7 +346,7 @@ module FIR(
       // Bus-Write EIN Takt
       if (we_reg) begin
         wr_addr_coeff           <= idx_reg;      // Adresse
-        write_en_coeff[tap_reg] <= 1'b1;         // nur gewählter TAP
+        write_en_coeff[tap_reg] <= 1'b1;         // nur gewÃ¤hlter TAP
         coeff_i[tap_reg]        <= data_reg;     // Wert
       end
     end
